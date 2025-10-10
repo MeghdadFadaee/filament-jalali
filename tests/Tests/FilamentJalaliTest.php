@@ -72,7 +72,7 @@ it('evaluates closures for format', function () {
     $column->table($table);
 
     expect($column)
-        ->jalaliDateTime(fn($state) => now()->isSameDay($state) ? 'H:i:s' : 'Y-m-d')
+        ->jalaliDateTime(fn ($state) => now()->isSameDay($state) ? 'H:i:s' : 'Y-m-d')
         ->record(User::make(['created_at' => '1989-10-07']))
         ->formatState('1989-10-07')
         ->toBe('1368-07-15');
@@ -80,7 +80,7 @@ it('evaluates closures for format', function () {
     $column = TextColumn::make('created_at');
     $column->table($table);
     expect($column)
-        ->jalaliDateTime(fn($state) => now()->isSameDay($state) ? 'H:i:s' : 'Y-m-d')
+        ->jalaliDateTime(fn ($state) => now()->isSameDay($state) ? 'H:i:s' : 'Y-m-d')
         ->record(User::make(['created_at' => now()]))
         ->formatState(now())
         ->toBe(now()->format('H:i:s'));
