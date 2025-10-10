@@ -33,15 +33,15 @@ class FilamentJalaliServiceProvider extends PackageServiceProvider
         ], 'mokhosh/filament-jalali');
 
         TextColumn::macro('jalaliDate', function (string|Closure|null $format = null, ?string $timezone = null) {
-            $format ??= fn (TextColumn $column): string => $column->getTable()->getDefaultDateTimeDisplayFormat();
+            $format ??= fn (TextColumn $column): string => $column->getTable()->getDefaultDateDisplayFormat();
 
-            $this->formatStateUsing(static function (Column $column, $state) use ($format, $timezone): ?string {
+            $this->formatStateUsing(static function (TextColumn $column, $state) use ($format, $timezone): ?string {
                 if (blank($state)) {
                     return null;
                 }
 
-                /** @var string */
-                $format = $column->evaluate($format) ?? $column->getContainer()->getDefaultDateDisplayFormat();
+                /** @var string $format */
+                $format = $column->evaluate($format) ?? $column->getTable()->getDefaultDateDisplayFormat();
 
                 return CalendarUtils::convertNumbers(
                     Jalalian::fromCarbon(
@@ -63,12 +63,14 @@ class FilamentJalaliServiceProvider extends PackageServiceProvider
         });
 
         TextEntry::macro('jalaliDate', function (string|Closure|null $format = null, ?string $timezone = null) {
+            $format ??= fn (TextEntry $component): string => $component->getContainer()->getDefaultDateDisplayFormat();
+
             $this->formatStateUsing(static function (TextEntry $component, $state) use ($format, $timezone): ?string {
                 if (blank($state)) {
                     return null;
                 }
 
-                /** @var string */
+                /** @var string $format */
                 $format = $component->evaluate($format) ?? $component->getContainer()->getDefaultDateDisplayFormat();
 
                 return CalendarUtils::convertNumbers(
@@ -83,6 +85,8 @@ class FilamentJalaliServiceProvider extends PackageServiceProvider
         });
 
         TextEntry::macro('jalaliDateTime', function (string|Closure|null $format = null, ?string $timezone = null) {
+            $format ??= fn (TextEntry $component): string => $component->getContainer()->getDefaultDateTimeDisplayFormat();
+
             $this->jalaliDate($format, $timezone);
 
             return $this;
