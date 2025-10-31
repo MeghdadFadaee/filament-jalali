@@ -1,15 +1,17 @@
 <?php
 
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Filament\Resources\Pages\ListRecords;
 
 it('formats state to jalali date', function () {
-    $table = Mockery::mock(Table::class);
-    $table->shouldReceive('getDefaultDateDisplayFormat')
-        ->andReturn('F d, Y');
+    Table::configureUsing(function (Table $table) {
+        $table->defaultDateDisplayFormat('F d, Y');
+    });
+
+    $page = new ListRecords;
+    $table = Table::make($page);
 
     $column = TextColumn::make('created_at');
     $column->table($table);
@@ -21,9 +23,12 @@ it('formats state to jalali date', function () {
 });
 
 it('formats state based on default date display format', function () {
-    $table = Mockery::mock(Table::class);
-    $table->shouldReceive('getDefaultDateDisplayFormat')
-        ->andReturn('Y-m-d');
+    Table::configureUsing(function (Table $table) {
+        $table->defaultDateDisplayFormat('Y-m-d');
+    });
+
+    $page = new ListRecords;
+    $table = Table::make($page);
 
     $column = TextColumn::make('created_at');
     $column->table($table);
@@ -37,9 +42,12 @@ it('formats state based on default date display format', function () {
 it('uses farsi numbers if app locale is fa', function () {
     App::setLocale('fa');
 
-    $table = Mockery::mock(Table::class);
-    $table->shouldReceive('getDefaultDateDisplayFormat')
-        ->andReturn('F d, Y');
+    Table::configureUsing(function (Table $table) {
+        $table->defaultDateDisplayFormat('F d, Y');
+    });
+
+    $page = new ListRecords;
+    $table = Table::make($page);
 
     $column = TextColumn::make('created_at');
     $column->table($table);
@@ -51,37 +59,25 @@ it('uses farsi numbers if app locale is fa', function () {
 });
 
 it('evaluates closures for format', function () {
-    class User extends Model
-    {
-        protected $guarded = [];
-    }
+    $oldRecord = ['__key' => 1, 'created_at' => Carbon::parse('1989-10-07')];
+    $newRecord = ['__key' => 1, 'created_at' => Carbon::now()];
 
-    $table = Mockery::mock(Table::class);
-    $table->shouldReceive('getDefaultDateDisplayFormat')
-        ->andReturn('Y-m-d');
+    $page = new ListRecords;
+    $table = Table::make($page);
 
-    $livewireMock = Mockery::mock(HasTable::class);
-
-    $livewireMock->shouldReceive('getTableRecordKey')
-        ->andReturn('id');
-
-    $table->shouldReceive('getLivewire')
-        ->andReturn($livewireMock);
-
-    $column = TextColumn::make('created_at');
-    $column->table($table);
+    $column = TextColumn::make('created_at')->table($table);
 
     expect($column)
-        ->jalaliDateTime(fn ($state) => now()->isSameDay($state) ? 'H:i:s' : 'Y-m-d')
-        ->record(User::make(['created_at' => '1989-10-07']))
-        ->formatState('1989-10-07')
+        ->jalaliDateTime(fn(Carbon $state) => $state->isToday() ? 'H:i:s' : 'Y-m-d')
+        ->record($oldRecord)
+        ->formatState($oldRecord['created_at'])
         ->toBe('1368-07-15');
 
-    $column = TextColumn::make('created_at');
-    $column->table($table);
+    $column = TextColumn::make('created_at')->table($table);
+
     expect($column)
-        ->jalaliDateTime(fn ($state) => now()->isSameDay($state) ? 'H:i:s' : 'Y-m-d')
-        ->record(User::make(['created_at' => now()]))
-        ->formatState(now())
+        ->jalaliDateTime(fn(Carbon $state) => $state->isToday() ? 'H:i:s' : 'Y-m-d')
+        ->record($newRecord)
+        ->formatState($newRecord['created_at'])
         ->toBe(now()->format('H:i:s'));
 });
